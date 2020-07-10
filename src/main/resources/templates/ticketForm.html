@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ticket form</title>
+</head>
+<body>
+
+    <div th:fragment="ticket-form">
+        <div class="modal-header">
+            <h5 class="modal-title" th:text="${ticket.isNew() ? 'Add new ticket' : 'Edit ticket'}"></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div th:if="${not #strings.isEmpty(error)}" class="toast-body alert-danger"  th:text="${error}"></div>
+            <div th:if="${#strings.isEmpty(error)}">
+                <form action="/save" th:object="${ticket}" method="post" id="ticketAddEditForm">
+                    <input type="hidden" th:field="*{id}"/>
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" th:field="*{title}" th:errorclass="is-invalid" id="title" required maxlength="100">
+                        <div class="invalid-feedback">
+                            <span th:each="err : ${#fields.errors('title')}" th:text="${err}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" th:field="*{description}" th:errorclass="is-invalid" id="description" required maxlength="4000"></textarea>
+                        <div class="invalid-feedback">
+                            <span th:each="err : ${#fields.errors('description')}" th:text="${err}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="text" class="form-control" th:field="*{email}" th:errorclass="is-invalid" id="email" required maxlength="100">
+                        <div class="invalid-feedback">
+                            <span th:each="err : ${#fields.errors('email')}" th:text="${err}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select th:field="*{priority}" th:errorclass="is-invalid" id="priority" required>
+                            <option th:each="priorityType : ${priorities}"
+                                    th:value="${priorityType}"
+                                    th:text="${priorityType}"
+                                    th:data-sort-index="${priorityType.sortValue}"></option>
+                        </select>
+                    </div>
+                    <div th:if="${not ticket.isNew()}" class="form-group">
+                        <label for="status">Status</label>
+                        <select th:field="*{status}" th:errorclass="is-invalid" id="status" required>
+                            <option th:each="statusType : ${statuses}"
+                                    th:value="${statusType}"
+                                    th:text="${statusType}"></option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary"><span th:text="${ticket.isNew() ? 'Add new ticket' : 'Save'}"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Service Desk</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <!-- Datatables CDN -->
+    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/v/dt/dt-1.10.21/datatables.min.css"/>
+</head>
+<body>
+    <div class="container">
+        <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center">
+            <div id="success-message" th:if="${not #strings.isEmpty(success)}" role="alert" aria-live="assertive" aria-atomic="true" class="toast" data-delay="10000">
+                <div class="toast-body alert-success" th:text="${success}">Success message</div>
+            </div>
+            <div id="error-message" th:if="${not #strings.isEmpty(error)}" role="alert" aria-live="assertive" aria-atomic="true" class="toast" data-delay="10000">
+                <div class="toast-body alert-danger" th:text="${error}">Error message</div>
+            </div>
+        </div>
+        <h1>Service Desk</h1>
+        <div class="row">
+            <div class="col">
+                <button id="ticket-add-button" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#ticket-add-modal">Add ticket</button>
+            </div>
+        </div>
+        <hr/>
+        <div class="row">
+            <div class="col">
+                <table id="ticketTable" class="display">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Email</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Updated</th>
+                        <th>&nbsp;</th>
+                        <th>&nbsp;</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${not #lists.isEmpty(tickets)}" th:each="ticket : ${tickets}">
+                        <td th:text="${ticket.id}"></td>
+                        <td th:text="${ticket.title}"></td>
+                        <td th:text="${ticket.description}"></td>
+                        <td th:text="${ticket.email}"></td>
+                        <td th:text="${ticket.priority}" th:data-order="${ticket.priority.sortValue}"></td>
+                        <td th:text="${ticket.status}"></td>
+                        <td th:text="${#temporals.format(ticket.createdTime, 'dd-MM-yyyy HH:mm')}"></td>
+                        <td th:text="${#temporals.format(ticket.updatedTime, 'dd-MM-yyyy HH:mm')}"></td>
+                        <td><a href="#" th:data-id="${ticket.id}" class="ticket-edit">Edit</a></td>
+                        <td><a href="#" th:data-id="${ticket.id}" th:data-title="${ticket.title}" class="ticket-delete">Delete</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="ticket-form-modal" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <!-- If ticket is present (like coming from submit with validation errors) fill with it and show. Otherwise empty placeholder to be loaded by js -->
+            <div class="modal-content">
+                <div  th:replace="${ticket != null} ? ~{ticketForm :: ticket-form} : ~{}" ></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation -->
+    <div class="modal fade" id="ticket-delete-confirm-modal" tabindex="-1" role="dialog" aria-labelledby="Delete confirmation" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="Delete confirmation">Delete?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmation-text"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <form action="#" id="confirmation-target" method="post">
+                        <button type="submit" class="btn btn-primary">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <!-- Datatables -->
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="http://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+
+    <script type="text/javascript">
+    let serviceDesk = {
+        init: function() {
+            serviceDesk.initModals();
+            serviceDesk.initDataTable();
+            serviceDesk.initNotifications();
+        },
+        initModals: function() {
+            $('#ticket-add-button').click(function() {
+                $('#ticket-form-modal .modal-content').load("/create", function() {
+                    $('#ticket-form-modal').modal('show');
+                })
+            });
+            $('.ticket-edit').click(function() {
+                let ticketId = $(this).data('id');
+                $('#ticket-form-modal .modal-content').load("/edit/" + ticketId, function() {
+                    $('#ticket-form-modal').modal('show');
+                })
+            });
+            $('.ticket-delete').click(function() {
+                let ticketId = $(this).data('id');
+                let ticketTitle = $(this).data('title');
+
+                $('#confirmation-text').text('Are you sure you want to delete ticket ' + ticketId + ' with title \'' + ticketTitle + '\'');
+                $('#confirmation-target').prop('action', '/delete/' + ticketId);
+                $('#ticket-delete-confirm-modal').modal('show');
+            });
+            if ($('#ticket-form-modal .modal-content').html().trim().length > 0) {
+                $('#ticket-form-modal').modal('show');
+            }
+        },
+        initNotifications: function() {
+            $('#success-message').toast('show');
+            $('#error-message').toast('show');
+        },
+        initDataTable: function() {
+            $('#ticketTable').DataTable({
+                columns: [
+                    null,
+                    null,
+                    {
+                        render: function(data, type) {
+                            if (type === 'display') {
+                                data = data.replace(/\n/g, '<br/>');
+                            }
+                            return data;
+                        }
+                    },
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    {
+                        searchable: false,
+                        orderable: false
+                    },
+                    {
+                        searchable: false,
+                        orderable: false
+                    }
+                ]
+            });
+        }
+    };
+    $(serviceDesk.init);
+    </script>
+</body>
+</html>
+
