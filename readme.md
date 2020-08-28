@@ -1,6 +1,6 @@
 ## Service Desk application
 
-This is service desk application for Eesti Energia test assignement:
+This is service desk application for test assignement:
 
 ## Assigment
 Test exercise - Service Desk

@@ -12,7 +12,7 @@
 	<artifactId>service-desk</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>service-desk</name>
-	<description>Test work "Service desk" for Eesti Energia by Andro Põlluste</description>
+	<description>Test work "Service desk" by Andro Põlluste</description>
 
 	<properties>
 		<java.version>11</java.version>
